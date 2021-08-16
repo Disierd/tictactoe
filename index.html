@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+    <header>
+        <link rel="stylesheet" href="myStyle.css">
+    </header>
+    <body>
+        <div id="title-display">
+            <h1 class="title">TIC-TAC-TOE</h1>
+            <h2 class="result"></h2>
+        </div>
+        <div id="page-layout">
+            <div class="player-display" id="xPlayer">
+                <p class="playerNumber">
+                    Player 1:
+                </p>
+                <p id="x-player-name">
+
+                </p>
+                <div id="x-input-container">
+                    <label for="x-name-input" id="x-input-label">Enter player name</label><br>
+                    <input type="text" id="x-name-input"><br>
+                    <button id="x-player-button">Submit name</button>
+                </div>
+            </div>
+            <div id="ui-board">
+                <div class="cell top-row left-column" data-x="0" data-y="0"></div>
+                <div class="cell top-row center-column" data-x="1" data-y="0"></div>
+                <div class="cell top-row right-column" data-x="2" data-y="0"></div>
+                <div class="cell middle-row left-column" data-x="0" data-y="1"></div>
+                <div class="cell middle-row center-column" data-x="1" data-y="1"></div>
+                <div class="cell middle-row right-column" data-x="2" data-y="1"></div>
+                <div class="cell bottom-row left-column" data-x="0" data-y="2"></div>
+                <div class="cell bottom-row center-column" data-x="1" data-y="2"></div>
+                <div class="cell bottom-row right-column" data-x="2" data-y="2"></div>
+            </div>
+            <div class="player-display" id="oPlayer">
+                <p class="playerNumber">
+                    Player 2:
+                </p>
+                <p id="o-player-name" class="playerName">
+
+                </p>
+                <div id="o-input-container">
+                    <label for="o-name-input" id="o-input-label">Enter player name</label><br>
+                    <input type="text" id="o-name-input"><br>
+                    <button id="o-player-button">Submit name</button>
+                </div>
+
+            </div>
+        </div>
+        <div id="start-button-container">
+            <span></span>
+            <button id="start-game" class="start-button">Player v Player!</button>
+            <button id="AI-game" class="start-button">Player v AI!</button>
+            <span></span>
+        </div>
+
+
+
+    </body>
+</html>
+<script>
+
+    const players = (piece) => {
+
+        const UIname = document.querySelector(`#${piece}-player-name`);
+        const inputContainer = document.querySelector(`#${piece}-input-container`);
+        const nameInput = document.querySelector(`#${piece}-name-input`);
+        const submitBtn = document.querySelector(`#${piece}-player-button`);
+        let name;
+        let getName = () => name;
+
+        submitBtn.addEventListener("click", () => {
+            inputContainer.style.visibility = "hidden";
+            updateName(nameInput.value);
+        });
+
+        const updateName = (inputName) => {
+            UIname.textContent = inputName;
+            name = inputName;
+        }
+
+        const inputToggle = () => {
+            inputContainer.style.visibility = (inputContainer.style.visibility === "hidden")? "visible":"hidden";
+        }
+
+        return {getName, updateName, inputToggle, piece};
+    }
+    const playerx = players("x");
+    const playero = players("o");
+
+
+
+    const game = (() => {
+
+        // Private variables
+        let round = 0;
+        let currentPlayer = playerx;
+        let activeGame = false;
+        let aiGame = false;
+        let board = [["", "", ""], ["", "", ""], ["", "", ""]];
+        
+        const cells = document.querySelectorAll(".cell")
+        const resultBox = document.querySelector(".result");
+        const startBtn = document.querySelector("#start-game");
+        const aiBtn = document.querySelector("#AI-game");
+
+        // Primary module functions
+        const placePiece = (x, y) => {
+            
+            if (!board[y][x] && activeGame){
+                board[y][x] = currentPlayer.piece;
+                updateUI(x, y);
+                if (round > 3) checkWinner(currentPlayer.piece, x, y);
+                round++;
+                switchPlayer();
+                if (aiGame && currentPlayer === playero) gameAI.playRound(board, round, x, y);
+            }
+            else if (!activeGame){
+                resultBox.textContent = "No moves are allowed. Select game type to play."
+            }
+            else {
+                resultBox.textContent = "Please select an unoccupied space."
+            }
+        }
+
+        const checkWinner = (piece, x, y) => {
+            
+            if ((board[y][0] === piece && board[y][1] === piece && board[y][2] === piece) || 
+                (board[0][x] === piece && board[1][x] === piece && board[2][x] === piece) ||
+                (board[0][0] === piece && board[1][1] === piece && board[2][2] === piece) ||
+                (board[0][2] === piece && board[1][1] === piece && board[2][0] === piece)){
+                    endGame(true);
+                    return;
+            }
+            else if (round === 8){
+                endGame(false);
+            }
+        }
+
+        const startGame = () => {
+
+            if (round !== 0) {
+                cells.forEach(cell => {cell.textContent = ""});
+                board = [["", "", ""], ["", "", ""], ["", "", ""]];
+            }
+            round = 0;
+            resultBox.textContent = "";
+            startBtn.style.visibility = "hidden";
+            aiBtn.style.visibility = "hidden";
+            activeGame = true;
+        }
+
+        const endGame = (winnerCheck) => {
+            if (winnerCheck){
+            resultBox.textContent = `Congratulations player ${(currentPlayer.getName())? currentPlayer.getName():currentPlayer.piece}! 
+            You won! Would you like a rematch?`;
+            }
+            else resultBox.textContent = `It's a draw! Would you like a rematch?`;
+
+            if (!aiGame) startBtn.textContent = "rematch", aiBtn.textContent = "Player v AI!";
+            else startBtn.textContent = "Player v Player!", aiBtn.textContent = "Rematch!"
+
+            startBtn.style.visibility = "visible";
+            aiBtn.style.visibility = "visible";
+            activeGame = false;
+        }
+
+
+        // Auxillary module functions
+        const switchPlayer = () => {
+            currentPlayer = (currentPlayer === playerx)? playero : playerx;
+        }
+
+        const updateUI = (x, y) => {
+            document.querySelector(`[data-x="${x}"][data-y="${y}"]`).textContent = currentPlayer.piece;
+        }
+
+        // Event listeners
+
+        cells.forEach(cell => { 
+            cell.addEventListener("click", (e) => {
+                xAxis = parseInt(e.target.getAttribute("data-x"));
+                yAxis = parseInt(e.target.getAttribute("data-y"));
+                placePiece(xAxis, yAxis);
+            });
+        });
+
+        startBtn.addEventListener("click", () => {
+            if (aiGame === true) playero.inputToggle();
+            playero.updateName("");
+            aiGame = false;
+            startGame();
+        });
+        aiBtn.addEventListener("click", () => {
+            currentPlayer = playerx;
+            if (aiGame === false) playero.inputToggle();
+            aiGame = true;
+            playero.updateName("AI");
+            startGame();
+
+        });
+
+        return {placePiece};
+    })();
+
+    const gameAI = (() => {
+
+        const memory = []
+        let a;
+        let b;
+
+        const executeMove = (x, y) => { // Stores move in memory and plays it via the game module
+            memory.unshift(x, y);
+            game.placePiece(x, y);
+        }
+
+        // AI brain - conducts checks based on most recent player move & AI move history to avoid superfluous for loops
+        const playRound = (board, round, x, y) => {
+
+            a = memory[0]; // most recent AI move position extracted from memory and stored in temporary variables
+            b = memory[1];
+
+            if (round > 2){
+
+                switch (true){
+                    case(board[b][1] === "o" && board[b][2] === "o" && !board[b][0]):
+                        executeMove(0, b);
+                        return;
+                    case(board[b][0] === "o" && board[b][2] === "o" && !board[b][1]):
+                        executeMove(1, b);
+                        return;
+                    case(board[b][0] === "o" && board[b][1] === "o" && !board[b][2]):
+                        executeMove(2, b);
+                        return;
+                    case(board[1][a] === "o" && board[2][a] === "o" && !board[0][a]):
+                        executeMove(a, 0);
+                        return;
+                    case(board[0][a] === "o" && board[2][a] === "o" && !board[1][a]):
+                        executeMove(a, 1);
+                        return;
+                    case(board[0][a] === "o" && board[1][a] === "o" && !board[2][a]):
+                        executeMove(a, 2);
+                        return;
+                    case(board[1][1] === "o" && board[2][2] === "o" && !board[0][0]):
+                        executeMove(0, 0);
+                        return;
+                    case(board[0][0] === "o" && board[2][2] === "o" && !board[1][1]):
+                        executeMove(1, 1);
+                        return;
+                    case(board[0][0] === "o" && board[1][1] === "o" && !board[2][2]):
+                        executeMove(2, 2);
+                        return;
+                    case(board[0][2] === "o" && board[1][1] === "o" && !board[2][0]):
+                        executeMove(0, 2);
+                        return;
+                    case(board[2][0] === "o" && board[0][2] === "o" && !board[1][1]):
+                        executeMove(1, 1);
+                        return;
+                    case(board[2][0] === "o" && board[1][1] === "o" && !board[0][2]):
+                        executeMove(2, 0);
+                        return;
+                }
+                
+                switch(true){
+                    case(board[y][1] === "x" && board[y][2] === "x" && !board[y][0]):
+                        executeMove(0, y);
+                        return;
+                    case(board[y][0] === "x" && board[y][2] === "x" && !board[y][1]):
+                        executeMove(1, y);
+                        return;
+                    case(board[y][0] === "x" && board[y][1] === "x" && !board[y][2]):
+                        executeMove(2, y);
+                        return;
+                    case(board[1][x] === "x" && board[2][x] === "x" && !board[0][x]):
+                        executeMove(x, 0);
+                        return;
+                    case(board[0][x] === "x" && board[2][x] === "x" && !board[1][x]):
+                        executeMove(x, 1);
+                        return;
+                    case(board[0][x] === "x" && board[1][x] === "x" && !board[2][x]):
+                        executeMove(x, 2);
+                        return;
+                    case(board[1][1] === "x" && board[2][2] === "x" && !board[0][0]):
+                        executeMove(0, 0);
+                        return;
+                    case(board[0][0] === "x" && board[2][2] === "x" && !board[1][1]):
+                        executeMove(1, 1);
+                        return;
+                    case(board[0][0] === "x" && board[1][1] === "x" && !board[2][2]):
+                        executeMove(2, 2);
+                        return;
+                    case(board[0][2] === "x" && board[1][1] === "x" && !board[2][0]):
+                        executeMove(0, 2);
+                        return;
+                    case(board[2][0] === "x" && board[0][2] === "x" && !board[1][1]):
+                        executeMove(1, 1);
+                        return;
+                    case(board[2][0] === "x" && board[1][1] === "x" && !board[0][2]):
+                        executeMove(2, 0);
+                        return;
+                    default:
+                        break;
+                }
+            }
+
+            if (round === 1){
+                switch("x"){
+                    case board[0][0]: 
+                    case board[2][2]:
+                    case board[2][0]:
+                    case board[0][2]:
+                        executeMove(1, 1);
+                        return;
+                    default:
+                        break;
+                }
+            }
+
+            if (round === 1){
+                switch("x"){
+                    case board[0][1]:
+                        executeMove(0, 0);
+                        return;
+                    case board[1][2]:
+                        executeMove(2, 0);
+                        return;
+                    case board[1][0]:
+                        executeMove(0, 2);
+                        return;
+                    case board[2][1]:
+                        executeMove(2, 2);
+                        return;
+                    default:
+                        break;
+                }
+            }
+            if (round === 3 && board[2][1] === "x" && board[0][0] === "x" && !board[2][0]){
+                executeMove(0, 2);
+                return;
+            }
+
+            if (round === 3 && !board[0][1]){
+                switch("x"){
+                    case board[0][0]: 
+                    case board[2][2]:
+                    case board[2][0]:
+                    case board[0][2]:
+                        executeMove(1, 0);
+                        return;
+                    default:
+                        break;
+                }
+            }
+
+            for (let i = 0; i < 3; i++){
+                for (let j = 0; j < 3; j++){
+                    if (!board[i][j]) {
+                            executeMove(j, i);
+                            return;
+                    }
+                }
+
+            }
+        }
+
+
+        return {playRound};
+    })();
+
+</script>
+</html>
