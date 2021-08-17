@@ -153,8 +153,7 @@
 
         const endGame = (winnerCheck) => {
             if (winnerCheck){
-            resultBox.textContent = `Congratulations player ${(currentPlayer.getName())? currentPlayer.getName():currentPlayer.piece}! 
-            You won! Would you like a rematch?`;
+            resultBox.textContent = `${(currentPlayer.getName())? currentPlayer.getName():currentPlayer.piece} won! Would you like a rematch?`;
             }
             else resultBox.textContent = `It's a draw! Would you like a rematch?`;
 
@@ -351,6 +350,25 @@
                     default:
                         break;
                 }
+            }
+
+            if (round == 3 && !board[1][1]){
+                switch(true){
+                    case (board[0][1] === "x" && board[1][2] === "x"): 
+                    case (board[1][2] === "x" && board[2][1] === "x"): 
+                    case (board[2][1] === "x" && board[1][0] === "x"): 
+                    case (board[1][0] === "x" && board[0][1] === "x"): 
+                        executeMove(1, 1);
+                        return;
+                    default:
+                        break; 
+
+                }
+            }
+
+            if (round === 5 && !board[2][2] && board[0][2] === "x" && board[1][0] === "x" && board[2][1] ==="x"){
+                executeMove(2, 2);
+                return;
             }
 
             for (let i = 0; i < 3; i++){
