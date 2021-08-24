@@ -344,6 +344,11 @@
                 return;
             }
 
+            if (round === 3 && board[0][2] === "x" && board[2][1] === "x" && !board[2][2]){
+                executeMove(2, 2);
+                return;
+            }
+
             if (round === 3 && !board[0][1]){
                 switch("x"){
                     case board[0][0]: 
